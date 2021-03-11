@@ -361,7 +361,7 @@ void * fim_run_realtime(__attribute__((unused)) void * args) {
 #if defined INOTIFY_ENABLED || defined WIN32
 
 static int _base_line = 0;
-
+int nfds = -1;
 #ifdef WIN32
     set_priority_windows_thread();
 #endif
@@ -371,11 +371,15 @@ static int _base_line = 0;
         // Directories in Windows configured with real-time add recursive watches
         for (int i = 0; syscheck.dir[i]; i++) {
             if (syscheck.opts[i] & REALTIME_ACTIVE) {
+                w_mutex_lock(&syscheck.fim_realtime_mutex);
                 realtime_adddir(syscheck.dir[i], 0, 0);
+                w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
             }
         }
 #endif
 
+        w_mutex_lock(&syscheck.fim_realtime_mutex);
         if (_base_line == 0) {
             _base_line = 1;
 
@@ -387,13 +391,20 @@ static int _base_line = 0;
                 mdebug2(FIM_NUM_WATCHES, syscheck.realtime->dirtb->elements);
             }
         }
+        w_mutex_unlock(&syscheck.fim_realtime_mutex);
 
 #ifdef WIN_WHODATA
         if (syscheck.realtime_change) {
             set_whodata_mode_changes();
         }
 #endif
+        w_mutex_lock(&syscheck.fim_realtime_mutex);
         if (syscheck.realtime && (syscheck.realtime->fd >= 0)) {
+            nfds = syscheck.realtime->fd;
+        }
+        w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
+        if (nfds >= 0) {
             log_realtime_status(1);
 #ifdef INOTIFY_ENABLED
             struct timeval selecttime;
@@ -405,19 +416,19 @@ static int _base_line = 0;
 
             // zero-out the fd_set
             FD_ZERO (&rfds);
-            FD_SET(syscheck.realtime->fd, &rfds);
-
-            run_now = select(syscheck.realtime->fd + 1,
+            FD_SET(nfds, &rfds);
+            run_now = select(nfds + 1,
                             &rfds,
                             NULL,
                             NULL,
                             &selecttime);
 
+
             if (run_now < 0) {
                 merror(FIM_ERROR_SELECT);
             } else if (run_now == 0) {
                 // Timeout
-            } else if (FD_ISSET (syscheck.realtime->fd, &rfds)) {
+            } else if (FD_ISSET (nfds, &rfds)) {
                 realtime_process();
             }
 
@@ -477,12 +488,15 @@ int fim_whodata_initialize() {
 #ifdef WIN_WHODATA // Whodata on Windows
     for (int i = 0; syscheck.dir[i]; i++) {
         if (syscheck.opts[i] & WHODATA_ACTIVE) {
+            w_mutex_lock(&syscheck.fim_realtime_mutex);
             if(realtime_adddir(syscheck.dir[i], i + 1, 0) == -2) {
                 syscheck.wdata.dirs_status[i].status &= ~WD_CHECK_WHODATA;
                 syscheck.opts[i] &= ~WHODATA_ACTIVE;
                 syscheck.wdata.dirs_status[i].status |= WD_CHECK_REALTIME;
                 syscheck.realtime_change = 1;
             }
+            w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
 
         }
     }
@@ -702,9 +716,12 @@ STATIC void fim_link_check_delete(int pos) {
     } else {
         fim_link_delete_range(pos);
 
+        w_mutex_lock(&syscheck.fim_realtime_mutex);
         if (syscheck.realtime && syscheck.realtime->dirtb) {
             fim_delete_realtime_watches(pos);
         }
+        w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
 #ifdef ENABLE_AUDIT
         if (syscheck.opts[pos] & WHODATA_ACTIVE) {
             remove_audit_rule_syscheck(syscheck.symbolic_links[pos]);
@@ -730,7 +747,6 @@ STATIC void fim_delete_realtime_watches(__attribute__((unused)) int pos) {
     dir_conf = fim_configuration_directory(syscheck.symbolic_links[pos]);
 
     if (dir_conf > -1) {
-        w_mutex_lock(&syscheck.fim_realtime_mutex);
         hash_node = OSHash_Begin(syscheck.realtime->dirtb, &inode_it);
         while(hash_node) {
             data = hash_node->data;
@@ -754,7 +770,6 @@ STATIC void fim_delete_realtime_watches(__attribute__((unused)) int pos) {
             free(OSHash_Delete_ex(syscheck.realtime->dirtb, wd_str));
             deletion_it--;
         }
-        w_mutex_unlock(&syscheck.fim_realtime_mutex);
     }
 
     W_Vector_free(watch_to_delete);
@@ -793,7 +808,10 @@ STATIC void fim_link_silent_scan(char *path, int pos) {
     fim_checker(path, &item, NULL, 0);
 
     if (syscheck.opts[pos] & REALTIME_ACTIVE) {
+        w_mutex_lock(&syscheck.fim_realtime_mutex);
         realtime_adddir(path, 0, 1);    // This is acting always on links, so `followsl` will always be `1`
+        w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
     } else if (syscheck.opts[pos] & WHODATA_ACTIVE) {
 #ifdef ENABLE_AUDIT
         // Just in case, we need to remove the configured directory if it was previously monitored
@@ -830,10 +848,6 @@ STATIC void fim_link_reload_broken_link(char *path, int index) {
 #endif
 #ifdef WIN_WHODATA
 void set_whodata_mode_changes() {
-    if (!syscheck.realtime) {
-        realtime_start();
-    }
-
     syscheck.realtime_change = 0;
 
     int i;
@@ -842,11 +856,14 @@ void set_whodata_mode_changes() {
             // At this point the directories in whodata mode that have been deconfigured are added to realtime
             syscheck.wdata.dirs_status[i].status &= ~WD_CHECK_REALTIME;
             syscheck.opts[i] |= REALTIME_ACTIVE;
+            w_mutex_lock(&syscheck.fim_realtime_mutex);
             if (realtime_adddir(syscheck.dir[i], 0, 0) != 1) {
                 merror(FIM_ERROR_REALTIME_ADDDIR_FAILED, syscheck.dir[i]);
             } else {
                 mdebug1(FIM_REALTIME_MONITORING, syscheck.dir[i]);
             }
+            w_mutex_unlock(&syscheck.fim_realtime_mutex);
+
         }
     }
 }

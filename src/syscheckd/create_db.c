@@ -149,7 +149,9 @@ time_t fim_scan() {
         fim_checker(real_path, &item, NULL, 1);
 #ifndef WIN32
         if (syscheck.opts[it] & REALTIME_ACTIVE) {
+            w_mutex_lock(&syscheck.fim_realtime_mutex);
             realtime_adddir(real_path, 0, (syscheck.opts[it] & CHECK_FOLLOW) ? 1 : 0);
+            w_mutex_unlock(&syscheck.fim_realtime_mutex);
         }
 #endif
         free(real_path);
@@ -210,8 +212,9 @@ time_t fim_scan() {
         _base_line = 1;
     }
     else {
-        // In the first scan, the fim inicialization is different between Linux and Windows.
+        // In the first scan, the fim initialization is different between Linux and Windows.
         // Realtime watches are set after the first scan in Windows.
+        w_mutex_lock(&syscheck.fim_realtime_mutex);
         if (syscheck.realtime != NULL) {
             if (syscheck.realtime->queue_overflow) {
                 realtime_sanitize_watch_map();
@@ -219,6 +222,7 @@ time_t fim_scan() {
             }
             mdebug2(FIM_NUM_WATCHES, syscheck.realtime->dirtb->elements);
         }
+        w_mutex_unlock(&syscheck.fim_realtime_mutex);
     }
 
     minfo(FIM_FREQUENCY_ENDED);
@@ -330,7 +334,9 @@ void fim_checker(const char *path, fim_element *item, whodata_evt *w_evt, int re
         }
 #ifndef WIN32
         if (item->configuration & REALTIME_ACTIVE) {
+            w_mutex_lock(&syscheck.fim_realtime_mutex);
             realtime_adddir(path, 0, (item->configuration & CHECK_FOLLOW) ? 1 : 0);
+            w_mutex_unlock(&syscheck.fim_realtime_mutex);
         }
 #endif
         fim_directory(path, item, w_evt, report);
