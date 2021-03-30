@@ -63,7 +63,7 @@ error:
 }
 
 /* Add a directory to real time checking */
-int realtime_adddir(const char *dir, int whodata, int followsl) {
+int realtime_adddir(const char *dir, __attribute__((unused)) int whodata, int followsl) {
     /* Check if it is ready to use */
     if (syscheck.realtime->fd < 0) {
         return (-1);

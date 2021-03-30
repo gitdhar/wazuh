@@ -110,7 +110,7 @@ void send_syscheck_msg(const cJSON *_msg) {
 
     static atomic_int_t n_msg_sent = ATOMIC_INT_INITIALIZER(0);
 
-    if (atomic_int_inc(&n_msg_sent) == syscheck.max_eps) {
+    if (atomic_int_inc(&n_msg_sent) >= syscheck.max_eps) {
         sleep(1);
         atomic_int_set(&n_msg_sent, 0);
     }
@@ -848,9 +848,13 @@ STATIC void fim_link_reload_broken_link(char *path, int index) {
 #endif
 #ifdef WIN_WHODATA
 void set_whodata_mode_changes() {
+    int i;
     syscheck.realtime_change = 0;
 
-    int i;
+    if (syscheck.realtime == NULL) {
+        realtime_start();
+    }
+
     for (i = 0; syscheck.dir[i]; i++) {
         if (syscheck.wdata.dirs_status[i].status & WD_CHECK_REALTIME) {
             // At this point the directories in whodata mode that have been deconfigured are added to realtime

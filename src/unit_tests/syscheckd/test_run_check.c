@@ -485,7 +485,6 @@ void test_fim_whodata_initialize_eventchannel(void **state) {
 
         str_lowercase(expanded_dirs[i]);
         expect_realtime_adddir_call(expanded_dirs[i], 10, 0);
-
     }
 
     will_return(__wrap_run_whodata_scan, 0);
