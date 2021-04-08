@@ -429,7 +429,7 @@ void fim_db_check_transaction(fdb_t *fim_sql) {
 
         // If the completion of the transaction fails, we do not update the timestamp
         if (fim_db_exec_simple_wquery(fim_sql, "END;") != FIMDB_ERR) {
-            mdebug1("Database transaction completed.");
+            mdebug2("Database transaction completed.");
             fim_sql->transaction.last_commit = now;
             while (fim_db_exec_simple_wquery(fim_sql, "BEGIN;") == FIMDB_ERR);
         }

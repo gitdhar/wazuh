@@ -181,7 +181,7 @@ int Start_win32_Syscheck()
             minfo(FIM_MONITORING_DIRECTORY, syscheck.dir[r], syscheck_opts2str(optstr, sizeof( optstr ), syscheck.opts[r]));
 
             if (syscheck.tag && syscheck.tag[r] != NULL) {
-                mdebug1(FIM_TAG_ADDED, syscheck.tag[r], syscheck.dir[r]);
+                mdebug2(FIM_TAG_ADDED, syscheck.tag[r], syscheck.dir[r]);
             }
 
             // Print diff file size limit

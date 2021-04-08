@@ -97,7 +97,7 @@ int realtime_adddir(const char *dir, __attribute__((unused)) int whodata, int fo
                     os_free(data);
                 }
 
-                mdebug1(FIM_REALTIME_NEWDIRECTORY, dir);
+                mdebug2(FIM_REALTIME_NEWDIRECTORY, dir);
             }
             else {
                 if (retval = OSHash_Update_ex(syscheck.realtime->dirtb, wdchar, data), retval == 0) {
@@ -229,7 +229,7 @@ int realtime_update_watch(const char *wd, const char *dir) {
             merror(FIM_ERROR_INOTIFY_ADD_MAX_REACHED, dir, new_wd, errno);
             return -1;
         } else if (errno == ENOENT) {
-            mdebug1("Removing watch on non existent directory '%s'", dir);
+            mdebug2("Removing watch on non existent directory '%s'", dir);
             inotify_rm_watch(syscheck.realtime->fd, old_wd);
             free(OSHash_Delete_ex(syscheck.realtime->dirtb, wd));
             return 0;
@@ -255,7 +255,7 @@ int realtime_update_watch(const char *wd, const char *dir) {
             merror_exit(FIM_CRITICAL_ERROR_OUT_MEM);
         }
 
-        mdebug1(FIM_REALTIME_NEWDIRECTORY, data);
+        mdebug2(FIM_REALTIME_NEWDIRECTORY, data);
     } else if (retval = OSHash_Update_ex(syscheck.realtime->dirtb, wdchar, data), retval == 0) {
         merror("Unable to update 'dirtb'. Directory not found: '%s'", data);
         os_free(data);
@@ -392,7 +392,7 @@ void CALLBACK RTCallBack(DWORD dwerror, DWORD dwBytes, LPOVERLAPPED overlap)
         w_mutex_lock(&syscheck.fim_realtime_mutex);
         rtlocald = OSHash_Delete_ex(syscheck.realtime->dirtb, wdchar);
         free_win32rtfim_data(rtlocald);
-        mdebug1(FIM_REALTIME_CALLBACK, wdchar);
+        mdebug2(FIM_REALTIME_CALLBACK, wdchar);
         w_mutex_unlock(&syscheck.fim_realtime_mutex);
         return;
     }
@@ -509,7 +509,7 @@ int realtime_adddir(const char *dir, int whodata, __attribute__((unused)) int fo
             syscheck.wdata.dirs_status[whodata - 1].object_type = WD_STATUS_FILE_TYPE;
             syscheck.wdata.dirs_status[whodata - 1].status |= WD_STATUS_EXISTS;
         } else {
-            mdebug1(FIM_WARN_REALTIME_OPENFAIL, dir);
+            mdebug2(FIM_WARN_REALTIME_OPENFAIL, dir);
 
             syscheck.wdata.dirs_status[whodata - 1].object_type = WD_STATUS_UNK_TYPE;
             syscheck.wdata.dirs_status[whodata - 1].status &= ~WD_STATUS_EXISTS;
@@ -586,7 +586,7 @@ int realtime_adddir(const char *dir, int whodata, __attribute__((unused)) int fo
             merror_exit(FIM_CRITICAL_ERROR_OUT_MEM);
         }
 
-        mdebug1(FIM_REALTIME_NEWDIRECTORY, dir);
+        mdebug2(FIM_REALTIME_NEWDIRECTORY, dir);
     }
 
     w_mutex_unlock(&syscheck.fim_realtime_mutex);
@@ -604,7 +604,7 @@ int fim_check_realtime_directory(win32rtfim *rtlocald) {
         If it doesn't happend, we will remove in next call to the function */
 
         if (rtlocald->watch_status == FIM_RT_HANDLE_CLOSED) {
-            mdebug1(FIM_REALTIME_CALLBACK, rtlocald->dir);
+            mdebug2(FIM_REALTIME_CALLBACK, rtlocald->dir);
             rtlocald = OSHash_Delete_ex(syscheck.realtime->dirtb, rtlocald->dir);
             free_win32rtfim_data(rtlocald);
             return 1;

@@ -452,7 +452,7 @@ void restore_sacls() {
             if (security_descriptor) {
                 LocalFree((HLOCAL)security_descriptor);
             }
-            mdebug1(FIM_SACL_RESTORED, syscheck.dir[i]);
+            mdebug2(FIM_SACL_RESTORED, syscheck.dir[i]);
         }
     }
 
@@ -756,7 +756,7 @@ unsigned long WINAPI whodata_callback(EVT_SUBSCRIBE_NOTIFY_ACTION action, __attr
                 if (result == 1) {
                     whodata_evt *w_evtdup;
 
-                    mdebug1(FIM_WHODATA_HANDLE_UPDATE, hash_id);
+                    mdebug2(FIM_WHODATA_HANDLE_UPDATE, hash_id);
                     if (w_evtdup = OSHash_Delete_ex(syscheck.wdata.fd, hash_id), !w_evtdup) {
                         merror(FIM_ERROR_WHODATA_HANDLER_REMOVE, hash_id);
                         free_whodata_event(w_evt);
@@ -983,7 +983,7 @@ long unsigned int WINAPI state_checker(__attribute__((unused)) void *_void) {
                     }
                 }
             } else {
-                mdebug1(FIM_WHODATA_DELETE, syscheck.dir[i]);
+                mdebug2(FIM_WHODATA_DELETE, syscheck.dir[i]);
                 d_status->status &= ~WD_STATUS_EXISTS;
                 d_status->object_type = WD_STATUS_UNK_TYPE;
             }
