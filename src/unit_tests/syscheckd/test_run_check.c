@@ -621,7 +621,7 @@ void test_fim_link_update_already_added(void **state) {
 
     snprintf(error_msg, OS_SIZE_128, FIM_LINK_ALREADY_ADDED, link_path);
 
-    expect_string(__wrap__mdebug1, formatted_msg, error_msg);
+    expect_string(__wrap__mdebug2, formatted_msg, error_msg);
 
     fim_link_update(pos, link_path);
 
@@ -759,7 +759,7 @@ void test_fim_link_reload_broken_link_already_monitored(void **state) {
 
     snprintf(error_msg, OS_SIZE_128, FIM_LINK_ALREADY_ADDED, link_path);
 
-    expect_string(__wrap__mdebug1, formatted_msg, error_msg);
+    expect_string(__wrap__mdebug2, formatted_msg, error_msg);
 
     fim_link_reload_broken_link(link_path, pos);
 

@@ -421,7 +421,7 @@ void test_realtime_adddir_realtime_add(void **state) {
     will_return(__wrap_OSHash_Get_ex, 0);
 
     expect_string(__wrap__mdebug2, formatted_msg, "(6224): Entry '/etc/folder' already exists in the RT hash table.");
-    expect_string(__wrap__mdebug1, formatted_msg, "(6227): Directory added for real time monitoring: '/etc/folder'");
+    expect_string(__wrap__mdebug2, formatted_msg, "(6227): Directory added for real time monitoring: '/etc/folder'");
 
     test_mode = 0;
     OSHash_Add_ex(syscheck.realtime->dirtb, "1", "/etc/folder"); // Duplicate simulation
@@ -455,7 +455,7 @@ void test_realtime_adddir_realtime_add_hash_failure(void **state) {
     will_return(__wrap_OSHash_Add_ex, 0);
 
     expect_string(__wrap__merror_exit, formatted_msg, "(6697): Out of memory. Exiting.");
-    expect_string(__wrap__mdebug1, formatted_msg, "(6227): Directory added for real time monitoring: '/etc/folder'");
+    expect_string(__wrap__mdebug2, formatted_msg, "(6227): Directory added for real time monitoring: '/etc/folder'");
 
     expect_function_call(__wrap_pthread_mutex_unlock);
 
@@ -986,7 +986,7 @@ void test_realtime_sanitize_watch_map_entry_deleted(void **state) {
 
     errno = ENOENT;
 
-    expect_string(__wrap__mdebug1, formatted_msg, "Removing watch on non existent directory '/media/some/path'");
+    expect_string(__wrap__mdebug2, formatted_msg, "Removing watch on non existent directory '/media/some/path'");
 
     will_return(__wrap_inotify_rm_watch, 0);
 
@@ -1098,7 +1098,7 @@ void test_realtime_sanitize_watch_map_entry_with_new_watch_number(void **state) 
     expect_string(__wrap_OSHash_Get_ex, key, "4321");
     will_return(__wrap_OSHash_Get_ex, NULL);
 
-    expect_string(__wrap__mdebug1, formatted_msg,
+    expect_string(__wrap__mdebug2, formatted_msg,
                   "(6227): Directory added for real time monitoring: '/media/some/path'");
 
     expect_value(__wrap_OSHash_Begin, self, syscheck.realtime->dirtb);
@@ -1154,7 +1154,7 @@ void test_realtime_sanitize_watch_map_entry_with_new_watch_number_fail(void **st
     expect_value(__wrap_OSHash_Begin, self, syscheck.realtime->dirtb);
     will_return(__wrap_OSHash_Begin, NULL);
 
-    expect_any(__wrap__mdebug1, formatted_msg);
+    expect_any(__wrap__mdebug2, formatted_msg);
 
     expect_any(__wrap__mdebug2, formatted_msg);
 
@@ -1315,7 +1315,7 @@ void test_realtime_adddir_whodata_non_existent_file(void **state) {
     expect_string(__wrap_check_path_type, dir, "C:\\a\\path");
     will_return(__wrap_check_path_type, 0);
 
-    expect_string(__wrap__mdebug1, formatted_msg, "(6907): 'C:\\a\\path' does not exist. Monitoring discarded.");
+    expect_string(__wrap__mdebug2, formatted_msg, "(6907): 'C:\\a\\path' does not exist. Monitoring discarded.");
 
     ret = realtime_adddir("C:\\a\\path", 1, 0);
 
@@ -1510,7 +1510,7 @@ void test_realtime_adddir_duplicate_entry_non_existent_directory_closed_handle(v
     will_return(__wrap_OSHash_Delete_ex, rtlocald);
 
     snprintf(debug_msg, OS_SIZE_128, FIM_REALTIME_CALLBACK, "C:\\a\\path");
-    expect_string(__wrap__mdebug1, formatted_msg, debug_msg);
+    expect_string(__wrap__mdebug2, formatted_msg, debug_msg);
 
     expect_function_call(__wrap_pthread_mutex_unlock);
 
@@ -1580,7 +1580,7 @@ void test_realtime_adddir_success(void **state) {
 
     will_return(wrap_ReadDirectoryChangesW, 1);
 
-    expect_string(__wrap__mdebug1, formatted_msg,
+    expect_string(__wrap__mdebug2, formatted_msg,
                   "(6227): Directory added for real time monitoring: 'C:\\a\\path'");
     expect_function_call(__wrap_pthread_mutex_unlock);
 
