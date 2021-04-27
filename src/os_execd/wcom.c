@@ -315,58 +315,57 @@ size_t wcom_check_manager_config(char **output) {
                                     "bin/wazuh-integratord", "bin/wazuh-dbd", "bin/wazuh-csyslogd", NULL
                                     };
 
-    int ret_val = 0;
-    int result_code = 0;
+    int response_retval = 0;
     int i;
     char command_in[PATH_MAX] = {0};
-    char *msg = NULL;
-    char *output_msg = NULL;
+    char *response_string = NULL;
+    char *command_out = NULL;
     cJSON *response = cJSON_CreateObject();
 
     for (i = 0; daemons[i]; i++) {
-        snprintf(command_in, PATH_MAX, "%s %s", daemons[i], "-t");
+        response_retval = 0;
+        snprintf(command_in, PATH_MAX, "%s -t", daemons[i]);
         // Exec a command with a timeout of 2000 seconds.
-        if (wm_exec(command_in, &output_msg, &result_code, 2000, NULL) < 0) {
-            if (result_code == EXECVE_ERROR) {
+        if (wm_exec(command_in, &command_out, &response_retval, 2000, NULL) < 0) {
+            if (response_retval == EXECVE_ERROR) {
                 mwarn("Path is invalid or file has insufficient permissions. %s", command_in);
             } else {
                 mwarn("Error executing [%s]", command_in);
             }
 
-            ret_val = 1;
-            size_t size = snprintf(NULL, 0, "Error executing %s - (%d)", command_in, result_code);
-            os_calloc(size + 1, sizeof(char), msg);
-            snprintf(msg, 0, "Error executing %s - (%d)", command_in, result_code);
+            os_free(response_string);
+            size_t size = snprintf(NULL, 0, "Error executing %s - (%d)", command_in, response_retval);
+            os_calloc(size + 1, sizeof(char), response_string);
+            snprintf(response_string, size, "Error executing %s - (%d)", command_in, response_retval);
             break;
         }
 
-        if (output_msg && *output_msg) {
+        if (command_out && *command_out) {
             // Remove last newline
-            size_t lastchar = strlen(output_msg) - 1;
-            output_msg[lastchar] = output_msg[lastchar] == '\n' ? '\0' : output_msg[lastchar];
+            size_t lastchar = strlen(command_out) - 1;
+            command_out[lastchar] = command_out[lastchar] == '\n' ? '\0' : command_out[lastchar];
 
-            wm_strcat(&msg, output_msg, ' ');
+            wm_strcat(&response_string, command_out, ' ');
         }
 
-        os_free(output_msg);
+        os_free(command_out);
 
-        if(result_code) {
-            ret_val = result_code;
+        if(response_retval) {
             break;
         }
     }
 
-    cJSON_AddNumberToObject(response, "error", ret_val);
+    cJSON_AddNumberToObject(response, "error", response_retval);
 
-    if (ret_val) {
+    if (response_retval) {
         char error_msg[OS_SIZE_4096 - 27] = {0};
-        snprintf(error_msg, OS_SIZE_4096 - 27, "%s", msg);
+        snprintf(error_msg, OS_SIZE_4096 - 27, "%s", response_string);
         cJSON_AddStringToObject(response, "message", error_msg);
     } else {
         cJSON_AddStringToObject(response, "message", "ok");
     }
 
-    os_free(msg);
+    os_free(response_string);
 
     *output = cJSON_PrintUnformatted(response);
     cJSON_Delete(response);
