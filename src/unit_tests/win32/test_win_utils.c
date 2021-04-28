@@ -36,7 +36,7 @@ int mock_sysinfo_networks_func(cJSON **object) {
     static const char *iface_bad_name = "{\"iface_fail\":[]}";
     static const char *iface_no_elements = "{\"iface\":[]";
     static const char *gateway_unknown = "{ \"iface\": [ { \"gateway\":\"unknown\" } ] }";
-    char *json_string = NULL;
+    const char *json_string = NULL;
 
     switch (test_case_selector) {
     case 1:

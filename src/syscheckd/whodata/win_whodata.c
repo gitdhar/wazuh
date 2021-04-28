@@ -182,7 +182,7 @@ int set_winsacl(const char *dir, int position) {
         retval = 0;
         goto end;
     case 1:
-        mdebug1(FIM_SACL_CHECK_CONFIGURE, dir);
+        mdebug2(FIM_SACL_CHECK_CONFIGURE, dir);
         syscheck.wdata.dirs_status[position].status |= WD_IGNORE_REST;
 
         // Empty SACL
