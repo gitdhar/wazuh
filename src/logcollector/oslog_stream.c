@@ -145,7 +145,7 @@ STATIC INLINE bool w_is_log_cmd_executable(void) {
     if (retval == 0) {
         return true;
     }
-    merror(ACCESS_ERROR, LOG_CMD_STR, X_OK, strerror(errno), errno);
+    merror(ACCESS_ERROR, LOG_CMD_STR, strerror(errno), errno);
     return false;
 }
 

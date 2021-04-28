@@ -67,7 +67,8 @@ list(APPEND logcollector_names "test_oslog_stream")
 list(APPEND logcollector_flags "-Wl,--wrap,wpopenv -Wl,--wrap,fileno -Wl,--wrap,fcntl -Wl,--wrap,_merror \
                                 -Wl,--wrap,fclose -Wl,--wrap,fflush -Wl,--wrap,fgets -Wl,--wrap,fgetpos \
                                 -Wl,--wrap,fopen -Wl,--wrap,fread -Wl,--wrap,fseek -Wl,--wrap,fwrite \
-                                -Wl,--wrap,remove -Wl,--wrap,fgetc -Wl,--wrap,wpclose")
+                                -Wl,--wrap,remove -Wl,--wrap,fgetc -Wl,--wrap,wpclose -Wl,--wrap,access \
+                                -Wl,--wrap,getpid")
 
 list(APPEND logcollector_names "test_read_oslog")
 list(APPEND logcollector_flags "-Wl,--wrap,w_expression_match")
